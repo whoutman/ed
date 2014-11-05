@@ -74,7 +74,7 @@ bool OccupancyGridPublisherPlugin::getMapData(const ed::WorldModel& world, std::
         ed::EntityConstPtr e = it->second;
 
 		//! Only entities with measurementSeq() >= 10 or 0 (known)
-		if (e->measurementSeq() > 0 && e->measurementSeq() < 10)
+		if (e->measurementSeq() > 0 && e->measurementSeq() < 5)
 			continue;
 
         //! Check the specifier, if set
