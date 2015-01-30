@@ -27,7 +27,7 @@ private:
 
     bool getMapData(const ed::WorldModel& world, std::vector<ed::EntityConstPtr>& entities_to_be_projected);
 
-    void updateMap(const ed::EntityConstPtr& e, cv::Mat& map);
+    void updateMap(const ed::EntityConstPtr& e, cv::Mat& map, int value);
 
     void publishMapMsg (const cv::Mat& map);
 

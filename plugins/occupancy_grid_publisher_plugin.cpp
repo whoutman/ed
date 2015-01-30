@@ -2,6 +2,7 @@
 
 //#include <ros/node_handle.h>
 #include <nav_msgs/OccupancyGrid.h>
+#include <costmap_2d/cost_values.h>
 
 #include <geolib/ros/msg_conversions.h>
 #include <geolib/Shape.h>
@@ -52,7 +53,21 @@ void OccupancyGridPublisherPlugin::process(const ed::WorldModel& world, ed::Upda
         cv::Mat map = cv::Mat::zeros(height_, width_, CV_8U);
 
         for(std::vector<ed::EntityConstPtr>::const_iterator it = entities_to_be_projected.begin(); it != entities_to_be_projected.end(); ++it)
-            updateMap(*it, map);
+	{
+        /// Determine cost value
+	    const std::string& type = (*it)->type();
+        const std::string& id   = (*it)->id().str();
+
+        unsigned char ch_value;
+        if (type == "human" or id == "human") {ch_value = costmap_2d::HUMAN;}
+        else if (type == "door" or id == "door") {ch_value = costmap_2d::DOOR;}
+        else if (type == "wall" or id == "wall") {ch_value = costmap_2d::WALL;}
+        else {ch_value = costmap_2d::UNKNONW_OBJECT;};
+
+        /// Since cost values range between 202 and 254, so 200 will be subtracted to get it to the range 0-100
+        int value = ch_value - 200;
+        updateMap(*it, map, value);
+	}
 
         publishMapMsg(map);
     }
@@ -132,9 +147,9 @@ bool OccupancyGridPublisherPlugin::getMapData(const ed::WorldModel& world, std::
 
 // ----------------------------------------------------------------------------------------------------
 
-void OccupancyGridPublisherPlugin::updateMap(const ed::EntityConstPtr& e, cv::Mat& map)
+void OccupancyGridPublisherPlugin::updateMap(const ed::EntityConstPtr& e, cv::Mat& map, int value)
 {
-    int value = 100;
+    //int value = 100;
 
     //! Check object persistence time
     double persistence_time;

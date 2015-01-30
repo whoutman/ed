@@ -5,6 +5,7 @@ project(ed)
 find_package(catkin REQUIRED COMPONENTS
   class_loader
   cv_bridge
+  costmap_2d
   ed_object_models
   geolib2
   geometry_msgs
