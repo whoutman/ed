@@ -59,9 +59,19 @@ void OccupancyGridPublisherPlugin::process(const ed::WorldModel& world, ed::Upda
         const std::string& id   = (*it)->id().str();
 
         unsigned char ch_value;
-        if (type == "human" or id == "human") {ch_value = costmap_2d::HUMAN;}
-        else if (type == "door" or id == "door") {ch_value = costmap_2d::DOOR;}
-        else if (type == "wall" or id == "wall") {ch_value = costmap_2d::WALL;}
+        // ToDo: put nicely in config
+        if (type.find("human") != std::string::npos || id.find("human") != std::string::npos) {ch_value = costmap_2d::HUMAN;}
+        else if (type.find("door") != std::string::npos || id.find("door") != std::string::npos) {ch_value = costmap_2d::DOOR;}
+        else if (type.find("chair") != std::string::npos || id.find("chair") != std::string::npos) {ch_value = costmap_2d::MOBILE_FURNITURE;}
+        else if (type.find("cabinet") != std::string::npos || id.find("cabinet") != std::string::npos ||
+                 type.find("table") != std::string::npos || id.find("table") != std::string::npos ||
+                 type.find("couch") != std::string::npos || id.find("couch") != std::string::npos ||
+                 type.find("bed") != std::string::npos || id.find("bed") != std::string::npos
+                 ) {ch_value = costmap_2d::STATIC_FURNITURE;}
+        else if (type.find("wall") != std::string::npos || id.find("wall") != std::string::npos) {ch_value = costmap_2d::WALL;}
+        //if (type == "human" or id == "human") {ch_value = costmap_2d::HUMAN;}
+        //else if (type == "door" or id == "door") {ch_value = costmap_2d::DOOR;}
+        //else if (type == "wall" or id == "wall") {ch_value = costmap_2d::WALL;}
         else {ch_value = costmap_2d::UNKNONW_OBJECT;};
 
         /// Since cost values range between 202 and 254, so 200 will be subtracted to get it to the range 0-100
