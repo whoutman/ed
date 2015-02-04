@@ -33,18 +33,20 @@ sensors:
         visualize: 0
 
 visualize: 1
-world_name: robotics_testlabs
+world_name: $(env ROBOT_ENV)
 
 perception:
     fit_shapes: 1
     model_list: all_models.yml
     modules:
-#    -  lib: libsize_matcher.so
-#    -  lib: libed_odu_finder.so
-#    -  lib: libcolor_matcher.so
+    -  lib: libsize_matcher.so
+    -  lib: libed_odu_finder.so
+    -  lib: libcolor_matcher.so
     -  lib: libhuman_contour_matcher.so
     -  lib: libface_detector.so
+    -  lib: libface_recognition_ed.so
     -  lib: libtype_aggregator.so
+
 
 plugins:
 - name: gui_server
@@ -62,15 +64,6 @@ plugins:
       frame_id: /map
       sim_time: 1.0
       object_persistence_time: 10
-- name: loc_grid_publisher
-  lib: libed_occupancy_grid_publisher_plugin.so
-  parameters:
-      frequency: 1
-      resolution: 0.025
-      topic: /ed_loc_map
-      frame_id: /map
-      specifier: localizable
-      sim_time: 0.0
 - name: tf_publisher
   lib: libed_tf_publisher_plugin.so
   parameters:
@@ -102,6 +95,6 @@ plugins:
           base_link_frame: /amigo/base_link
           alpha1: 0.05   # rot -> trans + strafe
           alpha2: 0.5    # trans -> rot
-          alpha3: 0.5    # trans -> trans
+          alpha3: 0.05    # trans -> trans
           alpha4: 0.5    # rot -> rot
           alpha5: 0.5    # trans -> strafe
