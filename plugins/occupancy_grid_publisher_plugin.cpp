@@ -65,6 +65,7 @@ void OccupancyGridPublisherPlugin::process(const ed::WorldModel& world, ed::Upda
         else if (type.find("chair") != std::string::npos || id.find("chair") != std::string::npos) {ch_value = costmap_2d::MOBILE_FURNITURE;}
         else if (type.find("cabinet") != std::string::npos || id.find("cabinet") != std::string::npos ||
                  type.find("table") != std::string::npos || id.find("table") != std::string::npos ||
+		 type.find("desk") != std::string::npos || id.find("desk") != std::string::npos ||
                  type.find("couch") != std::string::npos || id.find("couch") != std::string::npos ||
                  type.find("bed") != std::string::npos || id.find("bed") != std::string::npos
                  ) {ch_value = costmap_2d::STATIC_FURNITURE;}
@@ -100,17 +101,17 @@ bool OccupancyGridPublisherPlugin::getMapData(const ed::WorldModel& world, std::
     {
         ed::EntityConstPtr e = *it;
 
-		//! Only entities with measurementSeq() >= 10 or 0 (known)
-		if (e->measurementSeq() > 0 && e->measurementSeq() < 10)
-			continue;
+//		//! Only entities with measurementSeq() >= 10 or 0 (known)
+//		if (e->measurementSeq() > 0 && e->measurementSeq() < 10)
+//			continue;
 
         //! Check the specifier, if set
-        if (specifier_ != "")
-        {
-            double val;
-            if (!tue::config::Reader(e->data()).value(specifier_, val, tue::config::OPTIONAL) || !val)
-                continue;
-        }
+//        if (specifier_ != "")
+//        {
+//            double val;
+//            if (!tue::config::Reader(e->data()).value(specifier_, val, tue::config::OPTIONAL) || !val)
+//                continue;
+//        }
 
         //! Push back the entity
         entities_to_be_projected.push_back(e);
