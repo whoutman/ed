@@ -17,7 +17,7 @@ class Entity
 {
 
 public:
-    Entity(const UUID& id = generateID(), const TYPE& type = "", const unsigned int& measurement_buffer_size = 5);
+    Entity(const UUID& id = generateID(), const TYPE& type = "", const unsigned int& measurement_buffer_size = 1);
     ~Entity();
 
     static UUID generateID();

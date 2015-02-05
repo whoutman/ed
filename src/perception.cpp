@@ -162,7 +162,7 @@ void Perception::update(const WorldModelConstPtr& world_model, UpdateRequest& re
             PerceptionWorkerPtr worker = it_worker->second;
 
             // Check if it is idle, but has done work before
-            if (worker->isIdle() && worker->t_last_processing > 0)
+            if (worker->isIdle() && worker->t_last_processing > 0&& e->type() != "human")
             {
                 // Worker has already done work and finished. Check if we want to run it again
 
