@@ -42,7 +42,7 @@ void publishRGBDViewFrustrumVisualizationMarker(const rgbd::View& view, const ge
 
 
 
-void showMeasurements(const WorldModel& world_model, rgbd::ImageConstPtr rgbd_image);
+void showMeasurements(const WorldModel& world_model, rgbd::ImageConstPtr rgbd_image, cv::Mat& color_img);
 
 void showMeasurement(MeasurementConstPtr measurement, const std::string& id);
 

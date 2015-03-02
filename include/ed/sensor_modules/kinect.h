@@ -7,6 +7,8 @@
 #include <tue/profiling/profiler.h>
 #include <tue/profiling/ros/profile_publisher.h>
 
+#include "ed/helpers/image_publisher.h"
+
 namespace ed
 {
 
@@ -32,6 +34,9 @@ private:
     //! Processing
     std::map<std::string, RGBDALModulePtr> al_modules_;
     std::map<std::string, RGBDSegModulePtr> seg_modules_;
+
+    //! Visualization
+    ImagePublisher pub_viz_;
 
     //! Tunable params
     float voxel_size_;

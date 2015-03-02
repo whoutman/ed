@@ -177,6 +177,8 @@ void Kinect::configure(tue::Configuration config, bool reconfigure)
     config.value("clearing_padding_fraction", clearing_padding_fraction_);
     config.value("normal_k_search", normal_k_search_);
     config.value("visualize", visualize_);
+
+    pub_viz_.intialize("viz/kinect");
 }
 
 void Kinect::update(const WorldModelConstPtr& world_model, UpdateRequest& req)
@@ -353,11 +355,14 @@ void Kinect::update(const WorldModelConstPtr& world_model, UpdateRequest& req)
     }
 
     //! 8) Visualization
-    if (visualize_)
-    {
+    if (pub_viz_.enabled())
+    {    
         WorldModel wm_new(*world_model);
         wm_new.update(req);
-        helpers::visualization::showMeasurements(wm_new, rgbd_data.image);
+
+        cv::Mat viz;
+        helpers::visualization::showMeasurements(wm_new, rgbd_data.image, viz);
+        pub_viz_.publish(viz);
     }
 
     pub_profile_.publish();

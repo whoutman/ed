@@ -597,9 +597,9 @@ void showMeasurement(MeasurementConstPtr measurement, const std::string& id)
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-void showMeasurements(const WorldModel& world_model, rgbd::ImageConstPtr rgbd_image)
+void showMeasurements(const WorldModel& world_model, rgbd::ImageConstPtr rgbd_image, cv::Mat& color_img)
 {
-    cv::Mat color_img = rgbd_image->getRGBImage().clone() * 0.2;
+    color_img = rgbd_image->getRGBImage().clone() * 0.2;
     for (WorldModel::const_iterator it = world_model.begin(); it != world_model.end(); ++it)
     {
         const EntityConstPtr& e = *it;
