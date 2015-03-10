@@ -99,14 +99,14 @@ void Server::configure(tue::Configuration& config, bool reconfigure)
     profiler_.setName("ed");
     pub_profile_.initialize(profiler_);
 
-    if (config.value("world_name", world_name_))
+    if (config.value("world_name", world_name_, tue::OPTIONAL))
         initializeWorld();
     else
         std::cout << "No world specified in parameter file, cannot initialize world" << std::endl;
 
     if (pub_stats_.getTopic() == "")
     {
-        ros::NodeHandle nh;
+        ros::NodeHandle nh("~");
         pub_stats_ = nh.advertise<std_msgs::String>("ed/stats", 10);
     }
 

@@ -41,7 +41,7 @@ void TFPublisherPlugin::process(const ed::WorldModel& world, ed::UpdateRequest& 
         const ed::EntityConstPtr& e = *it;
 
         // check if its NULL, theres a bug somewhere
-        if (e){
+        if (e && e->id() != root_frame_id_){
             geo::Pose3D pose_MAP;
 
             pose_MAP = e->pose();
