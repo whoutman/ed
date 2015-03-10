@@ -18,10 +18,8 @@ Entity::Entity(const UUID& id, const TYPE& type, const unsigned int& measurement
     measurements_(measurement_buffer_size),
     convex_hull_buffer_(20),
     measurements_seq_(0),
-//    creation_time_(creation_time),
     pose_(geo::Pose3D::identity()),
-    velocity_(geo::Pose3D::identity()),
-    average_displacement_vector_(geo::Vector3(0,0,0))
+    velocity_(geo::Pose3D::identity())
 {
     convex_hull_.center_point = geo::Vector3(0,0,0);
 }
@@ -88,63 +86,6 @@ void Entity::addMeasurement(MeasurementConstPtr measurement)
     // Push back the measurement
     measurements_.push_front(measurement);
     measurements_seq_++;
-
-    // Update beste measurement
-    if (best_measurement_)
-    {
-        if (measurement->mask()->size() > best_measurement_->mask()->size())
-            best_measurement_ = measurement;
-    }
-    else
-    {
-        best_measurement_ = measurement;
-    }
-
-    // Update the convex hull
-    updateEntityState(measurement);
-}
-
-// ----------------------------------------------------------------------------------------------------
-
-void Entity::updateEntityState(MeasurementConstPtr m)
-{
-    // Update the chull
-    helpers::ddp::removeInViewConvexHullPoints(m->image(), m->sensorPose(), convex_hull_);
-    helpers::ddp::add2DConvexHull(m->convexHull(),convex_hull_);
-
-    // Update chull buffer
-    convex_hull_buffer_.push_front(std::make_pair(convex_hull_, m->timestamp())); // Store the convex hulls over time for velocity calculation
-
-    // Calculate velocity
-    calculateVelocity();
-}
-
-// ----------------------------------------------------------------------------------------------------
-
-void Entity::calculateVelocity()
-{
-    velocity_ = geo::Pose3D::identity();
-
-    double current = convex_hull_buffer_[0].second;
-    for (boost::circular_buffer<std::pair<ConvexHull2D, double> >::iterator it = convex_hull_buffer_.begin(); it != convex_hull_buffer_.end(); ++it)
-    {
-        double dt = current - it->second;
-        if (dt > 0.5)
-        {
-            if (dt < 1.0)
-            {
-                geo::Vector3 dv;
-
-                helpers::ddp::getDisplacementVector(convex_hull_buffer_[0].first, it->first, dv);
-
-                // Set velocity
-                velocity_.t = dv / dt;
-
-                average_displacement_vector_ = (average_displacement_vector_ + dv) / 2;
-            }
-            return;
-        }
-    }
 }
 
 // ----------------------------------------------------------------------------------------------------

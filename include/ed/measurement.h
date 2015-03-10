@@ -2,9 +2,7 @@
 #define measurement_h_
 
 #include "ed/types.h"
-#include "ed/mask.h"
-#include "ed/rgbd_data.h"
-#include "ed/convex_hull_2d.h"
+#include <geolib/datatypes.h>
 
 namespace ed
 {
@@ -15,27 +13,17 @@ class Measurement
 public:
 
     Measurement();
+    Measurement(const geo::Pose3D& sensor_pose, double timestamp, const std::string& type);
 
-    Measurement(rgbd::ImageConstPtr image, const ImageMask& image_mask);
-
-    Measurement(const RGBDData& rgbd_data, const PointCloudMaskPtr& mask, const ConvexHull2D& convex_hull = ConvexHull2D(), unsigned int seq = 0);
-
-    const geo::Pose3D& sensorPose() const { return rgbd_data_.sensor_pose; }
-    rgbd::ImageConstPtr image() const { return rgbd_data_.image; }
-    PointCloudMaskConstPtr mask() const { return mask_; }
-    const ImageMask& imageMask() const { return image_mask_; }
-    const ConvexHull2D& convexHull() const { return convex_hull_;  }
+    const geo::Pose3D& sensorPose() const { return sensor_pose_; }
     double timestamp() const { return timestamp_; }
+    const std::string& type() const { return type_; }
 
 protected:
 
-    RGBDData rgbd_data_;
-    PointCloudMaskPtr mask_;
-    ImageMask image_mask_;
+    geo::Pose3D sensor_pose_;
     double timestamp_;
-    unsigned int seq_;
-
-    ConvexHull2D convex_hull_; // This thingy is in map frame
+    std::string type_;
 
 };
 

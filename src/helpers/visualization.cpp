@@ -578,132 +578,132 @@ void publishRGBDViewFrustrumVisualizationMarker(const rgbd::View& view, const ge
 
 void showMeasurement(MeasurementConstPtr measurement, const std::string& id)
 {
-    cv::Mat black(measurement->image()->getRGBImage().rows, measurement->image()->getRGBImage().cols, CV_8UC3, cv::Scalar(0, 0, 0));
+//    cv::Mat black(measurement->image()->getRGBImage().rows, measurement->image()->getRGBImage().cols, CV_8UC3, cv::Scalar(0, 0, 0));
 
-    rgbd::View view(*measurement->image(),measurement->image()->getRGBImage().cols);
+//    rgbd::View view(*measurement->image(),measurement->image()->getRGBImage().cols);
 
-    std::vector<cv::Point2i> scaled_indices;
-    for(ImageMask::const_iterator it = measurement->imageMask().begin(); it != measurement->imageMask().end(); ++it)
-    {
-        black.at<cv::Vec3b>(*it) = view.getColor(it->x,it->y);
-        scaled_indices.push_back(*it);
-    }
-    cv::Rect rect = cv::boundingRect(scaled_indices);
+//    std::vector<cv::Point2i> scaled_indices;
+//    for(ImageMask::const_iterator it = measurement->imageMask().begin(); it != measurement->imageMask().end(); ++it)
+//    {
+//        black.at<cv::Vec3b>(*it) = view.getColor(it->x,it->y);
+//        scaled_indices.push_back(*it);
+//    }
+//    cv::Rect rect = cv::boundingRect(scaled_indices);
 
-    //show the img
-    cv::imshow(id,black(rect));
-    cv::waitKey(3);
+//    //show the img
+//    cv::imshow(id,black(rect));
+//    cv::waitKey(3);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 void showMeasurements(const WorldModel& world_model, rgbd::ImageConstPtr rgbd_image)
 {
-    cv::Mat color_img = rgbd_image->getRGBImage().clone() * 0.2;
-    for (WorldModel::const_iterator it = world_model.begin(); it != world_model.end(); ++it)
-    {
-        const EntityConstPtr& e = *it;
+//    cv::Mat color_img = rgbd_image->getRGBImage().clone() * 0.2;
+//    for (WorldModel::const_iterator it = world_model.begin(); it != world_model.end(); ++it)
+//    {
+//        const EntityConstPtr& e = *it;
 
-        if (e && !e->shape()) //! if it has no shape
-        {
-            if (e->lastMeasurement())
-            {
-                MeasurementConstPtr m = e->lastMeasurement();
+//        if (e && !e->shape()) //! if it has no shape
+//        {
+//            if (e->lastMeasurement())
+//            {
+//                MeasurementConstPtr m = e->lastMeasurement();
 
-                if (m->timestamp() == rgbd_image->getTimestamp() && e->measurementSeq() > 5)
-                {                   
-                    std::vector<cv::Point2i> pnts;
-                    for (ImageMask::const_iterator mit = m->imageMask().begin(color_img.cols); mit != m->imageMask().end(); ++mit)
-                    {
-                        color_img.at<cv::Vec3b>(*mit) = rgbd_image->getRGBImage().at<cv::Vec3b>(*mit);
-                        pnts.push_back(*mit);
-                    }
+//                if (m->timestamp() == rgbd_image->getTimestamp() && e->measurementSeq() > 5)
+//                {
+//                    std::vector<cv::Point2i> pnts;
+//                    for (ImageMask::const_iterator mit = m->imageMask().begin(color_img.cols); mit != m->imageMask().end(); ++mit)
+//                    {
+//                        color_img.at<cv::Vec3b>(*mit) = rgbd_image->getRGBImage().at<cv::Vec3b>(*mit);
+//                        pnts.push_back(*mit);
+//                    }
 
-                    // get the bounding rectangle of the mask
-                    cv::Rect bounding_rect = cv::boundingRect(pnts);
+//                    // get the bounding rectangle of the mask
+//                    cv::Rect bounding_rect = cv::boundingRect(pnts);
 
-                    // calculate color components
-                    std_msgs::ColorRGBA c_rgba = getColor(e->id().str());
-                    int red = c_rgba.r * 255;
-                    int green = c_rgba.g * 255;
-                    int blue = c_rgba.b * 255;
+//                    // calculate color components
+//                    std_msgs::ColorRGBA c_rgba = getColor(e->id().str());
+//                    int red = c_rgba.r * 255;
+//                    int green = c_rgba.g * 255;
+//                    int blue = c_rgba.b * 255;
 
-                    // create Scalar color with a minimum
-                    cv::Scalar color(std::max(red, 80), std::max(green, 80), std::max(blue, 80));
+//                    // create Scalar color with a minimum
+//                    cv::Scalar color(std::max(red, 80), std::max(green, 80), std::max(blue, 80));
 
-                    // draw bounding box rectangle
-                    cv::rectangle(color_img, bounding_rect, color, 2);
+//                    // draw bounding box rectangle
+//                    cv::rectangle(color_img, bounding_rect, color, 2);
 
-//                    std::vector<cv::Point2i> chull;
-//                    cv::convexHull(pnts,chull);
-//                    std::vector<std::vector<cv::Point2i> > contours; contours.push_back(chull);
-//                    // draw convex hull contours
-//                    cv::drawContours(color_img,contours,0,color, 1);
+////                    std::vector<cv::Point2i> chull;
+////                    cv::convexHull(pnts,chull);
+////                    std::vector<std::vector<cv::Point2i> > contours; contours.push_back(chull);
+////                    // draw convex hull contours
+////                    cv::drawContours(color_img,contours,0,color, 1);
 
-                    tue::config::Reader config(e->data());
-                    std::string type;
-                    std::string info ;//= e->id().substr(0,4);
-                    float score = 0;
+//                    tue::config::Reader config(e->data());
+//                    std::string type;
+//                    std::string info ;//= e->id().substr(0,4);
+//                    float score = 0;
 
-                    // update type given by perception modules type and certainty
-                    if (config.readGroup("perception_result", tue::config::OPTIONAL))
-                    {
-                        if (config.readGroup("type_aggregator", tue::config::OPTIONAL))
-                        {
-                            if (config.value("type", type, tue::config::OPTIONAL) &&
-                                config.value("score", score, tue::config::OPTIONAL)){
-                                info = boost::str(boost::format("%.2f") % score);
-                            }
-                        }
-                        config.endGroup(); // close type_aggregator group
-                    }
-                    config.endGroup();  // close perception_result group
+//                    // update type given by perception modules type and certainty
+//                    if (config.readGroup("perception_result", tue::config::OPTIONAL))
+//                    {
+//                        if (config.readGroup("type_aggregator", tue::config::OPTIONAL))
+//                        {
+//                            if (config.value("type", type, tue::config::OPTIONAL) &&
+//                                config.value("score", score, tue::config::OPTIONAL)){
+//                                info = boost::str(boost::format("%.2f") % score);
+//                            }
+//                        }
+//                        config.endGroup(); // close type_aggregator group
+//                    }
+//                    config.endGroup();  // close perception_result group
 
-                    // if no type was read, use the default and the UID
-                    if (type.empty()){
-                        type = e->type();
-                        info = e->id().str().substr(0,4);
-                    }else if (type.compare("unknown") == 0){
-                        type = "";
-                        info = e->id().str().substr(0,4);
-                    }else if (type.compare("human") == 0){
-                        // in case type is human, replace by name
-                        if (config.readGroup("perception_result", tue::config::OPTIONAL)){
-                            if (config.readGroup("face_recognizer", tue::config::OPTIONAL))
-                            {
-                                std::string person_name;
-                                if (config.value("label", person_name, tue::config::OPTIONAL) &&
-                                    config.value("score", score, tue::config::OPTIONAL)){
-                                    if (!person_name.empty() && score > 0){
-                                        type = person_name;
-                                        info = boost::str(boost::format("%.2f") % score);
-                                    }
-                                }
-                            }
-                            config.endGroup(); // close type_aggregator group
-                        }
-                        config.endGroup();  // close perception_result group
-                    }
+//                    // if no type was read, use the default and the UID
+//                    if (type.empty()){
+//                        type = e->type();
+//                        info = e->id().str().substr(0,4);
+//                    }else if (type.compare("unknown") == 0){
+//                        type = "";
+//                        info = e->id().str().substr(0,4);
+//                    }else if (type.compare("human") == 0){
+//                        // in case type is human, replace by name
+//                        if (config.readGroup("perception_result", tue::config::OPTIONAL)){
+//                            if (config.readGroup("face_recognizer", tue::config::OPTIONAL))
+//                            {
+//                                std::string person_name;
+//                                if (config.value("label", person_name, tue::config::OPTIONAL) &&
+//                                    config.value("score", score, tue::config::OPTIONAL)){
+//                                    if (!person_name.empty() && score > 0){
+//                                        type = person_name;
+//                                        info = boost::str(boost::format("%.2f") % score);
+//                                    }
+//                                }
+//                            }
+//                            config.endGroup(); // close type_aggregator group
+//                        }
+//                        config.endGroup();  // close perception_result group
+//                    }
 
-                    // draw name background rectangle
-                    cv::rectangle(color_img, cv::Point(bounding_rect.x, bounding_rect.y) + cv::Point(0, -22),
-                                  cv::Point(bounding_rect.x, bounding_rect.y) + cv::Point(((type.size() + 6) * 10), -2),
-                                  color - cv::Scalar(140, 140, 140), CV_FILLED);
+//                    // draw name background rectangle
+//                    cv::rectangle(color_img, cv::Point(bounding_rect.x, bounding_rect.y) + cv::Point(0, -22),
+//                                  cv::Point(bounding_rect.x, bounding_rect.y) + cv::Point(((type.size() + 6) * 10), -2),
+//                                  color - cv::Scalar(140, 140, 140), CV_FILLED);
 
-                    // draw name and ID
-                    cv::putText(color_img, type + "(" + info + ")",
-                                cv::Point(bounding_rect.x, bounding_rect.y) + cv::Point(5, -8),
-                                1, 1.0, color, 1, CV_AA);
-                }
-            }
-        }
-    }
+//                    // draw name and ID
+//                    cv::putText(color_img, type + "(" + info + ")",
+//                                cv::Point(bounding_rect.x, bounding_rect.y) + cv::Point(5, -8),
+//                                1, 1.0, color, 1, CV_AA);
+//                }
+//            }
+//        }
+//    }
 
-//    static cv::VideoWriter v("output.avi", CV_FOURCC('M','J','P','G'), 10, cv::Size(color_img.cols, color_img.rows));
-//    v.write(color_img);
+////    static cv::VideoWriter v("output.avi", CV_FOURCC('M','J','P','G'), 10, cv::Size(color_img.cols, color_img.rows));
+////    v.write(color_img);
 
-    cv::imshow("measurements", color_img);
-    cv::waitKey(3);
+//    cv::imshow("measurements", color_img);
+//    cv::waitKey(3);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

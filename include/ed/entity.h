@@ -49,17 +49,12 @@ public:
     inline const geo::Pose3D& velocity() const { return velocity_; }
     inline void setVelocity(const geo::Pose3D& velocity) { velocity_ = velocity; }
 
-//    inline void setConfig(const tue::Configuration& config) { config_ = config; }
-//    inline tue::Configuration getConfig() const { return config_.limitScope(); }
-
     inline const tue::config::DataConstPointer& data() const { return config_; }
     inline void setData(const tue::config::DataConstPointer& data) { config_ = data; }
 
     //! For debugging purposes
     bool in_frustrum;
     bool object_in_front;
-
-//    inline double creationTime() const { return creation_time_; }
 
     inline void setRelationTo(Idx child_idx, Idx r_idx) { relations_to_[child_idx] = r_idx; }
 
@@ -103,12 +98,6 @@ private:
 
     geo::Pose3D pose_;
     geo::Pose3D velocity_;
-    geo::Vector3 average_displacement_vector_;
-
-    void updateEntityState(MeasurementConstPtr m);
-    void calculateVelocity();
-
-//    double creation_time_;
 
     tue::config::DataConstPointer config_;
 
