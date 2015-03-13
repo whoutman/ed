@@ -145,8 +145,10 @@ PluginContainerPtr Server::loadPlugin(const std::string& plugin_name, const std:
     // Create a plugin container
     PluginContainerPtr container(new PluginContainer());
 
+    InitData init(property_key_db_, config);
+
     // Load the plugin
-    if (!container->loadPlugin(plugin_name, full_lib_file, config))
+    if (!container->loadPlugin(plugin_name, full_lib_file, init))
         return PluginContainerPtr();
 
     // Add the plugin container
@@ -184,11 +186,11 @@ void Server::stepPlugins()
             plugins_with_requests.push_back(c);
 
             // Temporarily for Javier
-//            for(std::vector<PluginContainerPtr>::iterator it = plugin_containers_.begin(); it != plugin_containers_.end(); ++it)
-//            {
-//                PluginContainerPtr c = *it;
-//                c->plugin()->updateRequestCallback(*c->updateRequest());
-//            }
+            for(std::vector<PluginContainerPtr>::iterator it2 = plugin_containers_.begin(); it2 != plugin_containers_.end(); ++it2)
+            {
+                PluginContainerPtr c2 = *it2;
+                c2->plugin()->updateRequestCallback(*c->updateRequest());
+            }
         }
     }
 

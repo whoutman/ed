@@ -8,6 +8,9 @@
 
 #include <boost/circular_buffer.hpp>
 
+#include "ed/property.h"
+#include "ed/property_key.h"
+
 namespace ed
 {
 
@@ -52,6 +55,67 @@ public:
 
     const std::map<Idx, Idx>& relationsTo() const { return relations_to_; }
 
+    template<typename T>
+    const T* property(const PropertyKey<T>& key) const
+    {
+        std::map<Idx, Property>::const_iterator it = properties_.find(key.idx);
+        if (it == properties_.end())
+            return 0;
+
+        const Property& p = it->second;
+
+        try
+        {
+            return &p.value.getValue<T>();
+        }
+        catch (std::bad_cast& e)
+        {
+            return 0;
+        }
+    }
+
+    template<typename T>
+    void setProperty(const PropertyKey<T>& key, const T& t)
+    {
+        if (!key.valid())
+            return;
+
+        std::map<Idx, Property>::iterator it = properties_.find(key.idx);
+        if (it == properties_.end())
+        {
+            Property& p = properties_[key.idx];
+            p.info = key.info;
+            p.revision = 0;
+            p.value.setValue(t);
+        }
+        else
+        {
+            Property& p = it->second;
+            p.value.setValue(t);
+            ++(p.revision);
+        }
+    }
+
+    void setProperty(Idx idx, const Property& p)
+    {
+        std::map<Idx, Property>::iterator it = properties_.find(idx);
+        if (it == properties_.end())
+        {
+            Property& p_new = properties_[idx];
+            p_new.info = p.info;
+            p_new.revision = 0;
+            p_new.value = p.value;
+        }
+        else
+        {
+            Property& p_new = it->second;
+            p_new.value = p.value;
+            ++(p_new.revision);
+        }
+    }
+
+    const std::map<Idx, Property>& properties() const { return properties_; }
+
 private:
 
     UUID id_;
@@ -63,6 +127,9 @@ private:
     //! What do we want this, where is a relation defined? (Rein)
     std::map<Idx, Idx> relations_from_;
     std::map<Idx, Idx> relations_to_;
+
+    // Generic property map
+    std::map<Idx, Property> properties_;
 
 };
 

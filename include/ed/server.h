@@ -5,6 +5,8 @@
 
 #include <tue/config/configuration.h>
 
+#include "ed/property_key_db.h"
+
 #include <queue>
 
 namespace ed
@@ -49,6 +51,9 @@ private:
     std::queue<UpdateRequest> update_requests_;
 
     void initializeWorld();
+
+    //! Property Key DB
+    PropertyKeyDB property_key_db_;
 
     //! Plugins
     std::vector<std::string> plugin_paths_;
