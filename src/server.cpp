@@ -1,33 +1,20 @@
 #include "ed/server.h"
 
 #include "ed/entity.h"
-#include "ed/measurement.h"
-#include "ed/helpers/visualization.h"
-#include "ed/helpers/depth_data_processing.h"
-
-#include <geolib/Box.h>
-
-// Storing measurements to disk
-#include "ed/io/filesystem/write.h"
-
-#include <tue/profiling/scoped_timer.h>
-
-#include <tue/filesystem/path.h>
 
 #include "ed/plugin.h"
 #include "ed/plugin_container.h"
 #include "ed/world_model.h"
 
-#include <tue/config/loaders/yaml.h>
+#include "ed/error_context.h"
 
 #include <boost/make_shared.hpp>
 
-#include <std_msgs/String.h>
-
-#include "ed/serialization/serialization.h"
+#include <tue/config/loaders/yaml.h>
 #include <tue/config/writer.h>
+#include <tue/filesystem/path.h>
 
-#include "ed/error_context.h"
+
 
 namespace ed
 {
@@ -66,13 +53,6 @@ void Server::configure(tue::Configuration& config, bool reconfigure)
 {
     ErrorContext errc("Server", "configure");
 
-    // For now, do not reconfigure perception
-    if (!reconfigure && config.readGroup("perception"))
-    {
-        perception_.configure(config.limitScope());
-        config.endGroup();
-    }
-
     // Unload all previously loaded plugins
     plugin_containers_.clear();
 
@@ -94,22 +74,6 @@ void Server::configure(tue::Configuration& config, bool reconfigure)
 
         config.endArray();
     }
-
-    // Initialize profiler
-    profiler_.setName("ed");
-    pub_profile_.initialize(profiler_);
-
-    if (config.value("world_name", world_name_, tue::OPTIONAL))
-        initializeWorld();
-    else
-        std::cout << "No world specified in parameter file, cannot initialize world" << std::endl;
-
-    if (pub_stats_.getTopic() == "")
-    {
-        ros::NodeHandle nh("~");
-        pub_stats_ = nh.advertise<std_msgs::String>("ed/stats", 10);
-    }
-
 }
 
 // ----------------------------------------------------------------------------------------------------
@@ -124,15 +88,6 @@ void Server::reset()
 {
     ErrorContext errc("Server", "reset");
 
-    // Prepare default world-addition request
-    UpdateRequest req_world;
-    std::stringstream error;
-    if (!model_loader_.create(world_name_, world_name_, req_world, error))
-    {
-        ROS_ERROR_STREAM("[ED] While resetting world: " << error.str());
-        return;
-    }
-
     // Prepare deletion request
     UpdateRequest req_delete;
     for(WorldModel::const_iterator it = world_model_->begin(); it != world_model_->end(); ++it)
@@ -141,9 +96,8 @@ void Server::reset()
     // Create world model copy
     WorldModelPtr new_world_model = boost::make_shared<WorldModel>(*world_model_);
 
-    // Apply the requests (first deletion, than default world creation)
+    // Apply the requests
     new_world_model->update(req_delete);
-    new_world_model->update(req_world);
 
     // Swap to new world model
     world_model_ = new_world_model;
@@ -264,25 +218,8 @@ void Server::update()
 {
     ErrorContext errc("Server", "update");
 
-    tue::ScopedTimer t(profiler_, "ed");
-
     // Create world model copy (shallow)
     WorldModelPtr new_world_model = boost::make_shared<WorldModel>(*world_model_);
-
-    // Perception update (make soup of the entity measurements)
-    {
-        tue::ScopedTimer t(profiler_, "perception");
-
-        UpdateRequest req;
-        perception_.update(new_world_model, req);
-        new_world_model->update(req);
-    }
-
-    // Look if we can merge some not updates entities
-    {
-        tue::ScopedTimer t(profiler_, "merge entities");
-        mergeEntities(new_world_model, 5.0, 0.5);
-    }
 
     // Notify all plugins of the updated world model
     for(std::vector<PluginContainerPtr>::iterator it = plugin_containers_.begin(); it != plugin_containers_.end(); ++it)
@@ -293,237 +230,26 @@ void Server::update()
 
     // Set the new (updated) world
     world_model_ = new_world_model;
-
-    pub_profile_.publish();
 }
-
-// ----------------------------------------------------------------------------------------------------
-
-void Server::update(const std::string& update_str, std::string& error)
-{
-    tue::ScopedTimer t(profiler_, "ed");
-
-
-    // convert update string to update request
-    tue::Configuration cfg;
-
-    tue::config::loadFromYAMLString(update_str, cfg);
-
-    if (cfg.hasError())
-    {
-        error = cfg.error();
-        return;
-    }
-
-    // - - - - - - - - - Create update request from cfg - - - - - - - - -
-
-    UpdateRequest req;
-
-    if (cfg.readArray("entities"))
-    {
-        while(cfg.nextArrayItem())
-        {
-            std::string id;
-            if (!cfg.value("id", id))
-                continue;
-
-            if (cfg.readGroup("pose"))
-            {
-                geo::Pose3D pose;
-
-                if (!cfg.value("x", pose.t.x) || !cfg.value("y", pose.t.y) || !cfg.value("z", pose.t.z))
-                    continue;
-
-                double rx = 0, ry = 0, rz = 0;
-                cfg.value("rx", rx, tue::OPTIONAL);
-                cfg.value("ry", ry, tue::OPTIONAL);
-                cfg.value("rz", rz, tue::OPTIONAL);
-
-                pose.R.setRPY(rx, ry, rz);
-
-                req.setPose(id, pose);
-
-                cfg.endGroup();
-            }
-        }
-
-        cfg.endArray();
-    }
-
-    // Check for errors
-    if (cfg.hasError())
-    {
-        error = cfg.error();
-        return;
-    }
-
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    // Create world model copy (shallow)
-    WorldModelPtr new_world_model = boost::make_shared<WorldModel>(*world_model_);
-
-    // Update the world model
-    new_world_model->update(req);
-
-    // Notify all plugins of the updated world model
-    for(std::vector<PluginContainerPtr>::iterator it = plugin_containers_.begin(); it != plugin_containers_.end(); ++it)
-    {
-        PluginContainerPtr c = *it;
-        c->setWorld(new_world_model);
-    }
-
-    // Set the new (updated) world
-    world_model_ = new_world_model;
-
-}
-
-// ----------------------------------------------------------------------------------------------------
-
-void Server::initializeWorld()
-{
-    ed::UpdateRequest req;
-    std::stringstream error;
-    if (!model_loader_.create(world_name_, world_name_, req, error))
-    {
-        ROS_ERROR_STREAM("[ED] Could not initialize world: " << error.str());
-        return;
-    }
-
-    // Create world model copy (shallow)
-    WorldModelPtr new_world_model = boost::make_shared<WorldModel>(*world_model_);
-
-    new_world_model->update(req);
-
-    world_model_ = new_world_model;
-}
-
-// ----------------------------------------------------------------------------------------------------
-
-void Server::storeEntityMeasurements(const std::string& path) const
-{
-    for(WorldModel::const_iterator it = world_model_->begin(); it != world_model_->end(); ++it)
-    {
-        const EntityConstPtr& e = *it;
-        MeasurementConstPtr msr = e->lastMeasurement();
-        if (!msr)
-            continue;
-
-        std::string filename = path + "/" + e->id().str();
-        if (!write(filename, *msr))
-        {
-            std::cout << "Saving measurement failed." << std::endl;
-        }
-    }
-}
-
-// ----------------------------------------------------------------------------------------------------
-
-void Server::mergeEntities(const WorldModelPtr& world_model, double not_updated_time, double overlap_fraction)
-{
-    std::vector<UUID> ids_to_be_removed;
-    std::vector<UUID> merge_target_ids;
-
-    // Iter over all entities and check if the current_time - last_update_time > not_updated_time
-    for (WorldModel::const_iterator it = world_model->begin(); it != world_model->end(); ++it)
-    {
-        const EntityConstPtr& e = *it;
-
-        // skip if e is null, theres some bug somewhere
-        if (e == NULL) continue;
-
-        if (!e->lastMeasurement())
-            continue;
-
-        if (e->shape() || std::find(merge_target_ids.begin(), merge_target_ids.end(), e->id()) != merge_target_ids.end() )
-            continue;
-
-        if ( ros::Time::now().toSec() - e->lastMeasurement()->timestamp() > not_updated_time )
-        {
-            // Try to merge with other polygons (except for itself)
-            for (WorldModel::const_iterator e_it = world_model->begin(); e_it != world_model->end(); ++e_it)
-            {
-                const EntityConstPtr& e_target = *e_it;
-                const UUID& id2 = e_target->id();
-
-                // Skip self
-                if (id2 == e->id())
-                    continue;
-
-                MeasurementConstPtr last_m = e_target->lastMeasurement();
-
-                if (!last_m)
-                    continue;
-
-                if (ros::Time::now().toSec() - last_m->timestamp() < not_updated_time)
-                    continue;
-
-                double overlap_factor;
-                bool collision = helpers::ddp::polygonCollisionCheck(e_target->convexHull(),
-                                                                     e->convexHull(),
-                                                                     overlap_factor);
-
-                if (collision && overlap_factor > 0.5) { //! TODO: NEEDS REVISION
-                    ids_to_be_removed.push_back(e->id());
-                    ConvexHull2D convex_hull_target = e_target->convexHull();
-                    helpers::ddp::add2DConvexHull(e->convexHull(), convex_hull_target);
-
-                    // Create a copy of the entity
-                    EntityPtr e_target_updated(new Entity(*e_target));
-
-                    // Update the convex hull
-                    e_target_updated->setConvexHull(convex_hull_target);
-
-                    // Update the best measurement
-                    MeasurementConstPtr best_measurement = e->bestMeasurement();
-                    if (best_measurement)
-                        e_target_updated->addMeasurement(best_measurement);
-
-                    // Set updated entity
-                    world_model->setEntity(e_target->id(), e_target_updated);
-
-                    merge_target_ids.push_back(e_target->id());
-                    break;
-                }
-            }
-        }
-    }
-
-    for (std::vector<UUID>::const_iterator it = ids_to_be_removed.begin(); it != ids_to_be_removed.end(); ++it)
-    {
-        world_model->removeEntity(*it);
-    }    
-}
-
 
 // ----------------------------------------------------------------------------------------------------
 
 void Server::publishStatistics() const
 {
-    std::stringstream s;
+//    std::stringstream s;
 
-    s << "[plugins]" << std::endl;
-    for(std::vector<PluginContainerPtr>::const_iterator it = plugin_containers_.begin(); it != plugin_containers_.end(); ++it)
-    {
-        const PluginContainerPtr& p = *it;
+//    s << "[plugins]" << std::endl;
+//    for(std::vector<PluginContainerPtr>::const_iterator it = plugin_containers_.begin(); it != plugin_containers_.end(); ++it)
+//    {
+//        const PluginContainerPtr& p = *it;
 
-        // Calculate CPU usage percentage
-        double cpu_perc = p->totalProcessingTime() * 100 / p->totalRunningTime();
+//        // Calculate CPU usage percentage
+//        double cpu_perc = p->totalProcessingTime() * 100 / p->totalRunningTime();
 
-        s << "    " << p->name() << ": " << cpu_perc << " % (" << p->loopFrequency() << " hz)" << std::endl;
-    }
+//        s << "    " << p->name() << ": " << cpu_perc << " % (" << p->loopFrequency() << " hz)" << std::endl;
+//    }
 
-
-    std_msgs::String msg;
-    msg.data = s.str();
-
-    pub_stats_.publish(msg);
-
-//    // TEMP
-//    tue::config::DataPointer data;
-//    tue::config::Writer w(data);
-//    ed::serialize(*world_model_, w);
-
-//    std::cout << data << std::endl;
+    // TODO: Log statics to something, maybe to the world model but no ROS dependent shizzle
 }
 
 }

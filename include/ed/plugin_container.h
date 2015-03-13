@@ -4,7 +4,6 @@
 #include "ed/types.h"
 #include "ed/update_request.h"
 
-#include <tue/profiling/timer.h>
 #include <tue/config/configuration.h>
 
 #include <boost/thread.hpp>
@@ -57,8 +56,6 @@ public:
 
     double loopFrequency() const { return loop_frequency_; }
 
-    double totalRunningTime() const { return total_timer_.getElapsedTimeInSec(); }
-
     double totalProcessingTime() const { return total_process_time_sec_; }
 
 protected:
@@ -84,8 +81,6 @@ protected:
 
     bool step_finished_;
 
-    tue::Timer timer_;
-
     double t_last_update_;
 
     mutable boost::mutex mutex_world_;
@@ -95,8 +90,6 @@ protected:
     WorldModelConstPtr world_current_;
 
     double total_process_time_sec_;
-
-    tue::Timer total_timer_;
 
     void step();
 

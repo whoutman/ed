@@ -10,8 +10,6 @@
 #include <vector>
 #include <geolib/datatypes.h>
 
-#include <ed/convex_hull_2d.h>
-
 namespace ed
 {
 
@@ -20,39 +18,10 @@ class UpdateRequest
 
 public:
 
-    // MEASUREMENTS
-
-    std::map<UUID, std::vector<MeasurementConstPtr> > measurements;
-    void addMeasurement(const UUID& id, const MeasurementConstPtr& m) { measurements[id].push_back(m); }
-
-    void addMeasurements(const UUID& id, const std::vector<MeasurementConstPtr>& measurements_)
-    {
-        std::vector<MeasurementConstPtr>& v = measurements[id];
-        v.insert(v.end(), measurements_.begin(), measurements_.end());
-    }
-
-
-    // SHAPES
-
-    std::map<UUID, geo::ShapeConstPtr> shapes;
-    void setShape(const UUID& id, const geo::ShapeConstPtr& shape) { shapes[id] = shape; }
-
-
-    // CONVEX HULLS
-
-    std::map<UUID, ed::ConvexHull2D> convex_hulls;
-    void setConvexHull(const UUID& id, const ed::ConvexHull2D& convex_hull) { convex_hulls[id] = convex_hull; }
-
     // TYPES
 
     std::map<UUID, std::string> types;
     void setType(const UUID& id, const std::string& type) { types[id] = type; }
-
-
-    // POSES
-
-    std::map<UUID, geo::Pose3D> poses;
-    void setPose(const UUID& id, const geo::Pose3D& pose) { poses[id] = pose; }
 
 
     // RELATIONS
@@ -89,14 +58,9 @@ public:
 
     void removeEntity(const UUID& id) { removed_entities.insert(id); }
 
-
-
     bool empty() const
     {
-        return measurements.empty() &&
-               shapes.empty() &&
-               types.empty() &&
-               poses.empty() &&
+        return types.empty() &&
                relations.empty() &&
                removed_entities.empty() &&
                datas.empty();

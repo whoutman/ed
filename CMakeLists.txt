@@ -5,12 +5,8 @@ project(ed)
 find_package(catkin REQUIRED COMPONENTS
   class_loader
   geolib2
-  roscpp
-  roslib
   tue_config
   tue_filesystem
-  tue_serialization
-  tue_config
 )
 
 ###################################
@@ -19,7 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
     INCLUDE_DIRS include
     LIBRARIES ed_core
-    CATKIN_DEPENDS tue_config tue_serialization
+    CATKIN_DEPENDS tue_config 
 )
 
 ###########
@@ -41,7 +37,6 @@ file(GLOB_RECURSE HEADER_FILES include/*.h)
 # Declare a cpp library
 add_library(ed_core
     src/entity.cpp
-    src/measurement.cpp
     src/update_request.cpp
     src/world_model.cpp
     src/transform_cache.cpp

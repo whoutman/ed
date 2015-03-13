@@ -2,9 +2,6 @@
 
 #include "ed/plugin.h"
 
-// TODO: get rid of ros rate
-#include <ros/rate.h>
-
 namespace ed
 {
 
@@ -14,7 +11,6 @@ PluginContainer::PluginContainer()
     : class_loader_(0), cycle_duration_(0.1), loop_frequency_(10), stop_(false), step_finished_(true), t_last_update_(0),
       total_process_time_sec_(0)
 {
-    timer_.start();
 }
 
 // --------------------------------------------------------------------------------
@@ -58,13 +54,13 @@ PluginPtr PluginContainer::loadPlugin(const std::string plugin_name, const std::
             name_ = plugin_name;
             plugin_->name_ = plugin_name;
 
+            // Read optional frequency
+            config.value("frequency", freq, tue::OPTIONAL);
+
             if (config.readGroup("parameters"))
             {
                 // Configure plugin
                 plugin_->configure(config.limitScope());
-
-                // Read optional frequency
-                config.value("frequency", freq, tue::OPTIONAL);
 
                 config.endGroup();
             }
@@ -98,13 +94,10 @@ void PluginContainer::runThreaded()
 
 void PluginContainer::run()
 {
-    total_timer_.start();
-
-    ros::Rate r(loop_frequency_);
     while(!stop_)
     {
         step();
-        r.sleep();
+        boost::this_thread::sleep(boost::posix_time::seconds(1.0 / loop_frequency_));
     }
 }
 
@@ -134,13 +127,7 @@ void PluginContainer::step()
     {        
         UpdateRequestPtr update_request(new UpdateRequest);
 
-        tue::Timer timer;
-        timer.start();
-
         plugin_->process(*world_current_, *update_request);
-
-        timer.stop();
-        total_process_time_sec_ += timer.getElapsedTimeInSec();
 
         // If the received update_request was not empty, set it
         if (!update_request->empty())
