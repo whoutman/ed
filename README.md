@@ -17,6 +17,7 @@ We assume you have successfully installed ROS and set-up a Catkin workspace. Che
     git clone https://github.com/tue-robotics/tue_filesystem
     git clone https://github.com/tue-robotics/geolib2
     git clone https://github.com/tue-robotics/tue_config.git
+    git clone https://github.com/tue-robotics/code_profiler.git
     
 You will also need the following system dependencies:
 
