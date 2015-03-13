@@ -16,16 +16,11 @@ We assume you have successfully installed ROS and set-up a Catkin workspace. Che
     git clone https://github.com/tue-robotics/ed.git
     git clone https://github.com/tue-robotics/tue_filesystem
     git clone https://github.com/tue-robotics/geolib2
-    git clone https://github.com/tue-robotics/code_profiler
     git clone https://github.com/tue-robotics/tue_config.git
-    git clone https://github.com/tue-robotics/ed_object_models.git
-    git clone https://github.com/tue-robotics/tue_serialization
-    git clone https://github.com/tue-robotics/rgbd
-    git clone https://github.com/tue-robotics/ed_gui_server.git
     
 You will also need the following system dependencies:
 
-    sudo apt-get install ros-hydro-visualization-msgs ros-hydro-geometry-msgs ros-hydro-pcl-ros ros-hydro-message-filters ros-hydro-image-geometry ros-hydro-kdl-parser libyaml-dev ros-hydro-roslib ros-hydro-navigation ros-hydro-std-srvs ros-hydro-cv-bridge ros-hydro-tf libassimp-dev ros-hydro-message-generation ros-hydro-roscpp ros-hydro-message-runtime ros-hydro-class-loader ros-hydro-pcl-conversions
+    sudo apt-get install libyaml-dev ros-hydro-std-srvs ros-<DISTRO>-cv-bridge ros-<DISTRO>-tf libassimp-dev ros-<DISTRO>-class-loader 
     
 This should be sufficient to successfully compile ED:
 
@@ -42,10 +37,6 @@ You can provide multiple paths by seperating them using ':'.
 
 You can then start ED by running:
 
-    rosrun ed ed_server
+    rosrun ed ed [config_file]
     
-You can specify a configuration file for ED as a command line argument. Some example configuration files are in ed/config. 
-
-If you are not running ED on the Amigo or Sergio robots but you have a standard kinect config, then:
-    
-    roslaunch ed standard_kinect.launch
+You can specify a configuration file for ED as an optional command line argument. Some example configuration files are in examples.config
