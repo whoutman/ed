@@ -27,7 +27,6 @@ public:
     const TYPE& type() const { return type_; }
     void setType(const TYPE& type) { type_ = type; }
 
-    //! This should be the blackboard, should we also include the type, I think not (Rein)
     inline const tue::config::DataConstPointer& data() const { return config_; }
     inline void setData(const tue::config::DataConstPointer& data) { config_ = data; }
 
@@ -84,7 +83,7 @@ public:
         if (it == properties_.end())
         {
             Property& p = properties_[key.idx];
-            p.info = key.info;
+            p.entry = key.entry;
             p.revision = 0;
             p.value.setValue(t);
         }
@@ -102,7 +101,7 @@ public:
         if (it == properties_.end())
         {
             Property& p_new = properties_[idx];
-            p_new.info = p.info;
+            p_new.entry = p.entry;
             p_new.revision = 0;
             p_new.value = p.value;
         }
@@ -130,6 +129,8 @@ private:
 
     // Generic property map
     std::map<Idx, Property> properties_;
+
+    void updateConvexHull();
 
 };
 

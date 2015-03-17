@@ -88,16 +88,26 @@ void Server::reset()
 {
     ErrorContext errc("Server", "reset");
 
+    // Prepare default world-addition request
+    UpdateRequestPtr req_world(new UpdateRequest);
+    std::stringstream error;
+    if (!model_loader_.create(world_name_, world_name_, *req_world, error))
+    {
+        ROS_ERROR_STREAM("[ED] While resetting world: " << error.str());
+        return;
+    }
+
     // Prepare deletion request
-    UpdateRequest req_delete;
+    UpdateRequestPtr req_delete(new UpdateRequest);
     for(WorldModel::const_iterator it = world_model_->begin(); it != world_model_->end(); ++it)
-        req_delete.removeEntity((*it)->id());
+        req_delete->removeEntity((*it)->id());
 
     // Create world model copy
     WorldModelPtr new_world_model = boost::make_shared<WorldModel>(*world_model_);
 
-    // Apply the requests
-    new_world_model->update(req_delete);
+    // Apply the requests (first deletion, than default world creation)
+    new_world_model->update(*req_delete);
+    new_world_model->update(*req_world);
 
     // Swap to new world model
     world_model_ = new_world_model;
@@ -106,6 +116,8 @@ void Server::reset()
     for(std::vector<PluginContainerPtr>::iterator it = plugin_containers_.begin(); it != plugin_containers_.end(); ++it)
     {
         const PluginContainerPtr& c = *it;
+        c->addDelta(req_delete);
+        c->addDelta(req_world);
         c->setWorld(new_world_model);
     }
 }
@@ -189,7 +201,7 @@ void Server::stepPlugins()
             for(std::vector<PluginContainerPtr>::iterator it2 = plugin_containers_.begin(); it2 != plugin_containers_.end(); ++it2)
             {
                 PluginContainerPtr c2 = *it2;
-                c2->plugin()->updateRequestCallback(*c->updateRequest());
+                c2->addDelta(c->updateRequest());
             }
         }
     }

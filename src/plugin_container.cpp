@@ -2,6 +2,11 @@
 
 #include "ed/plugin.h"
 
+// TODO: get rid of ros rate
+#include <ros/rate.h>
+
+#include <ed/error_context.h>
+
 namespace ed
 {
 
@@ -134,21 +139,39 @@ void PluginContainer::step()
             return;
     }
 
+    std::vector<UpdateRequestConstPtr> world_deltas;
+
     // Check if there is a new world. If so replace the current one with the new one
     {
         boost::lock_guard<boost::mutex> lg(mutex_world_);
         if (world_new_)
         {
             world_current_ = world_new_;
+            world_deltas = world_deltas_;
+
+            world_deltas_.clear();
             world_new_.reset();
         }
     }
 
     if (world_current_)
     {        
+        PluginInput data(*world_current_, world_deltas);
+
         UpdateRequestPtr update_request(new UpdateRequest);
 
-        plugin_->process(*world_current_, *update_request);
+        tue::Timer timer;
+        timer.start();
+
+        // Old
+        {
+            ed::ErrorContext errc("Plugin:", name().c_str());
+
+            plugin_->process(*world_current_, *update_request);
+
+            // New
+            plugin_->process(data, *update_request);
+        }
 
         // If the received update_request was not empty, set it
         if (!update_request->empty())

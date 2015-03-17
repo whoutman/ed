@@ -20,17 +20,17 @@ class UpdateRequest
 
 public:
 
-    UpdateRequest() : empty_(true) {}
+    UpdateRequest() {}
 
     // TYPES
 
     std::map<UUID, std::string> types;
-    void setType(const UUID& id, const std::string& type) { types[id] = type; empty_ = false; }
+    void setType(const UUID& id, const std::string& type) { types[id] = type; flagUpdated(id); }
 
     // RELATIONS
 
     std::map<UUID, std::map<UUID, RelationConstPtr> > relations;
-    void setRelation(const UUID& id1, const UUID& id2, const RelationConstPtr& r) { relations[id1][id2] = r; empty_ = false; }
+    void setRelation(const UUID& id1, const UUID& id2, const RelationConstPtr& r) { relations[id1][id2] = r; flagUpdated(id1); flagUpdated(id2);}
 
     // DATA
 
@@ -52,7 +52,7 @@ public:
             it->second = data_total;
         }
 
-        empty_ = false;
+        flagUpdated(id);
     }
 
     std::map<UUID, std::map<Idx, Property> > properties;
@@ -64,9 +64,9 @@ public:
             return;
 
         Property& p = properties[id][key.idx];
-        p.info = key.info;
+        p.entry = key.entry;
         p.value = value;
-        empty_ = false;
+        flagUpdated(id);
     }
 
 
@@ -74,13 +74,17 @@ public:
 
     std::set<UUID> removed_entities;
 
-    void removeEntity(const UUID& id) { removed_entities.insert(id); empty_ = false; }
+    void removeEntity(const UUID& id) { removed_entities.insert(id); flagUpdated(id); }
 
-    bool empty() const { return empty_; }
+    // UPDATED (AND REMOVED) ENTITIES
+
+    std::set<UUID> updated_entities;
+
+    bool empty() const { return updated_entities.empty(); }
 
 private:
 
-    bool empty_;
+    void flagUpdated(const ed::UUID& id) { updated_entities.insert(id); }
 
 };
 
