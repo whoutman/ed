@@ -6,55 +6,20 @@ find_package(catkin REQUIRED COMPONENTS
   class_loader
   cv_bridge
   ed_object_models
+  ed_msgs
   geolib2
-  geometry_msgs
   rgbd
   pcl_conversions
   roscpp
   roslib
-  std_srvs
   tue_config
   tue_filesystem
   tue_serialization
-  message_generation
   tue_config
 )
 
 find_package(PCL REQUIRED)
 find_package(OpenCV REQUIRED)
-
-# Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-    EntityInfo.msg
-)
-
-# Generate services in the 'srv' folder
-add_service_files(
-  FILES
-    GetGUICommand.srv
-    GetMeasurements.srv
-    RaiseEvent.srv
-    SetClick.srv
-    SetLabel.srv
-    SimpleQuery.srv
-    LoadPlugin.srv
-
-    Query.srv
-    UpdateSrv.srv
-    Configure.srv
-    Reset.srv
-
-    # For builder plugin
-    SetEntity.srv
-)
-
-# Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-    geometry_msgs
-    tue_serialization
-)
 
 ###################################
 ## catkin specific configuration ##
@@ -62,7 +27,7 @@ generate_messages(
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ed_core ed_io
-  CATKIN_DEPENDS tue_config tue_serialization rgbd ed_object_models
+  CATKIN_DEPENDS tue_config tue_serialization rgbd ed_object_models ed_msgs
   # DEPENDS system_lib
 )
 
@@ -119,7 +84,6 @@ add_library(ed_core
   ${HEADER_FILES}
 )
 target_link_libraries(ed_core ${catkin_LIBRARIES} ${PCL_LIBRARIES})
-add_dependencies(ed_core ${PROJECT_NAME}_gencpp)
 
 add_library(ed_io
   src/serialization/serialization.cpp
@@ -132,7 +96,6 @@ add_library(ed_io
   src/io/json_reader.cpp
 )
 target_link_libraries(ed_io ed_core)
-add_dependencies(ed_io ${PROJECT_NAME}_gencpp)
 
 # ------------------------------------------------------------------------------------------------
 #                                               SERVER
@@ -145,7 +108,6 @@ add_executable(ed
   src/plugin_container.cpp
 )
 target_link_libraries(ed ed_core ed_io)
-add_dependencies(ed ${PROJECT_NAME}_gencpp)
 
 # ------------------------------------------------------------------------------------------------
 #                                               PLUGINS
@@ -159,7 +121,6 @@ target_link_libraries(ed_robot_plugin ${kdl_parser_LIBRARIES})
 
 add_library(ed_sync_plugin plugins/sync_plugin.cpp)
 target_link_libraries(ed_sync_plugin ${catkin_LIBRARIES})
-add_dependencies(ed_sync_plugin ${PROJECT_NAME}_gencpp)
 
 # ------------------------------------------------------------------------------------------------
 #                                                TOOLS
@@ -189,15 +150,12 @@ target_link_libraries(ed_test_wm ed_core ${OpenCV_LIBRARIES})
 
 add_executable(test_mask test/test_mask.cpp)
 target_link_libraries(test_mask ed_core ${OpenCV_LIBRARIES})
-add_dependencies(test_mask ${PROJECT_NAME}_gencpp)
 
 add_executable(test_service_speed test/test_service_speed.cpp)
 target_link_libraries(test_service_speed ed_core)
-add_dependencies(test_service_speed ${PROJECT_NAME}_gencpp)
 
 add_executable(show_gui test/show_gui.cpp)
 target_link_libraries(show_gui ed_core ${OpenCV_LIBRARIES})
-add_dependencies(show_gui ${PROJECT_NAME}_gencpp)
 
 add_executable(ed_test_heightmap_triangulation
   test/test_heightmap_triangulation.cpp
