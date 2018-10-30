@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   ed_object_models
   ed_msgs
   geolib2
+  kdl_parser
   rgbd
   pcl_conversions
   roscpp
@@ -15,9 +16,9 @@ find_package(catkin REQUIRED COMPONENTS
   tue_config
   tue_filesystem
   tue_serialization
-  tue_config
 )
 
+find_package(orocos_kdl REQUIRED)
 find_package(PCL REQUIRED)
 find_package(OpenCV REQUIRED)
 
